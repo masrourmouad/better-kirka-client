@@ -60,4 +60,4 @@ A simple, yet performance-optimized and feature-rich kirka client
 | PageUp  | Toggle Client Settings   |
 
 ## Download here:
-• [Download version 1.5.4](https://github.com/42infi/better-kirka-client/releases/tag/1.5.4)
+• [Download](https://github.com/42infi/better-kirka-client/releases)
