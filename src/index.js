@@ -56,7 +56,15 @@ const createWindow = () => {
         e.preventDefault();
     });
 
-    autoUpdater.checkForUpdatesAndNotify();
+    win.on('ready-to-show', ()=>{
+        setTimeout(()=>{
+            autoUpdater.checkForUpdatesAndNotify();
+        }, 3000);
+    });
+
+    autoUpdater.on('update-available', () => {
+        win.webContents.send('update');
+    });
 
     autoUpdater.on('update-downloaded', () => {
         autoUpdater.quitAndInstall();

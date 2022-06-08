@@ -8,6 +8,10 @@ const settings = new Store();
 const documents = ipcRenderer.sendSync('docs');
 let scriptFolder = documents + "\\BetterKirkaClient\\scripts";
 
+ipcRenderer.on('update', () => {
+    alert("new update available, downloading and installing, client restarting soon")
+});
+
 if (!fs.existsSync(scriptFolder)) {
     fs.mkdirSync(scriptFolder, {recursive: true});
 }
@@ -619,7 +623,7 @@ function animate() {
         maxPlayersLab.innerText = maxPlayerSlider.value + " max. Players";
     }
 
-    if(minTimeLeftSlider){
+    if (minTimeLeftSlider) {
         minTimeLeft = Number.parseInt(minTimeLeftSlider.value);
         minTimeLeftLab.innerText = minTimeLeftSlider.value + " min. Time Left";
     }
