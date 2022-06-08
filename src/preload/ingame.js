@@ -53,7 +53,6 @@ WeakMap.prototype.set = new Proxy(WeakMap.prototype.set, {
     apply(target, thisArg, argArray) {
 
         if (argArray[0] && argArray[0].type === 'Scene' && argArray[0].children[0].type === 'AmbientLight') {
-            console.log(...arguments);
             scene = argArray[0];
         }
 
@@ -69,7 +68,7 @@ new MutationObserver(mutationRecords => {
             record.addedNodes.forEach(el => {
                 if (el.classList?.contains("loading-scene") && noLoadingTimes) el.parentNode.removeChild(el);
                 if (el.id === "qc-cmp2-container") el.parentNode.removeChild(el);
-                if (el.id === "cmpPersistentLink" || el.classList?.contains("home")) {
+                if (el.id === "cmpPersistentLink" || el.classList?.contains("home") || el.classList?.contains('moneys')) {
 
                     let btn = document.createElement("button");
 
@@ -121,7 +120,7 @@ new MutationObserver(mutationRecords => {
                         window.open("https://www.youtube.com/watch?v=Vmf5evAwScc");
                     };
 
-                    if (!el.classList?.contains("home")) el.parentNode.removeChild(el);
+                    if (!el.classList?.contains("home") && !el.classList?.contains('moneys')) el.parentNode.removeChild(el);
 
                 }
                 if (el.classList?.contains("game-interface")) {
@@ -454,7 +453,7 @@ function animate() {
             if (!prevInsp) {
                 prevInspectPos = weaponModel.position.clone();
                 prevInspectRot = weaponModel.rotation.clone();
-                if(weaponModel) inspectedWeapon = weaponModel;
+                if (weaponModel) inspectedWeapon = weaponModel;
             }
             weaponModel.rotation.x = 0;
             weaponModel.rotation.y = -0.3;
@@ -553,40 +552,31 @@ animate();
 //just to remind you, your client has to be open source if you want to use stuff from here :)
 XMLHttpRequest = class extends XMLHttpRequest {
 
-    constructor() {
-        super();
-
-        this.send = (...sendArgs) => {
-            let oldChange = this.onreadystatechange;
-            this.onreadystatechange = (...args) => {
-                if (this.responseURL === "https://api.kirka.io/api/inventory") {
-                    if (this.response.length > 0) {
-                        let entries = JSON.parse(this.response);
-                        let sortedItems = {legendary: [], epic: [], rare: [], common: []};
-
-                        for (let entry of entries) {
-                            sortedItems[entry.item.rarity.toLowerCase()].push(entry);
-                        }
-
-                        let editEntries = [];
-                        for (let rarity in sortedItems) {
-                            editEntries = [].concat(editEntries, sortedItems[rarity]);
-                        }
-
-                        Object.defineProperty(this, 'responseText', {
-                            writable: true,
-                            value: editEntries
-                        });
-                    }
-                }
-                oldChange && oldChange.apply(this, ...args);
-            };
-
-            super.send(...sendArgs);
-        };
-
+    open(method, url) {
+        if (url === "https://api.kirka.io/api/inventory") this.invReq = true;
+        return super.open(...arguments);
     }
 
+    get responseText() {
+        if (this.invReq) {
+            this.invReq = false;
+            let entries = JSON.parse(this.responseText);
+            let sortedItems = {legendary: [], epic: [], rare: [], common: []};
+
+            for (let entry of entries) {
+                sortedItems[entry.item.rarity.toLowerCase()].push(entry);
+            }
+
+            let editEntries = [];
+            for (let rarity in sortedItems) {
+                editEntries = [].concat(editEntries, sortedItems[rarity]);
+            }
+
+            return JSON.stringify(editEntries);
+        }
+
+        return super.responseText;
+    }
 }
 
 function toggleGui() {
@@ -608,3 +598,5 @@ function hexToRgb(hex) {
         b: parseInt(result[3], 16)
     } : null;
 }
+
+

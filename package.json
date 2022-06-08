@@ -11,8 +11,8 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "build": "electron-builder build --win --publish never",
-    "deploy": "electron-builder build --win --publish always"
+    "build": "electron-builder build --win --x64 --ia32 --publish never",
+    "deploy": "electron-builder build --win --x64 --ia32 --publish always"
   },
   "dependencies": {
     "electron-localshortcut": "^3.2.1",
