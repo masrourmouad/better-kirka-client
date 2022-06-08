@@ -33,6 +33,9 @@ let playerHighLight = !!settings.get('playerHighLight');
 let fullBlack = !!settings.get('fullBlack');
 let wireframe = !!settings.get('wireframe');
 let rainbow = !!settings.get('rainbow');
+let adspower = !!settings.get('adspower');
+let autoJoin = !!settings.get('autoJoin');
+
 
 let inspecting = false;
 let prevInsp = false;
@@ -46,6 +49,32 @@ let menuVisible = false;
 
 let listening = false;
 if (!settings.get('inspectKey')) settings.set('inspectKey', "j");
+
+let euLobbies = !!settings.get('euLobbies');
+let naLobbies = !!settings.get('naLobbies');
+let asiaLobbies = !!settings.get('asiaLobbies');
+let ffaLobbies = !!settings.get('ffaLobbies');
+let tdmLobbies = !!settings.get('tdmLobbies');
+let parkourLobbies = !!settings.get('parkourLobbies');
+let preferredFilter = typeof settings.get('preferredFilter') == 'undefined' ? 'Players' : settings.get('preferredFilter');
+let minPlayers = typeof settings.get('minPlayers') == 'undefined' ? 4 : settings.get('minPlayers');
+let maxPlayers = typeof settings.get('maxPlayers') == 'undefined' ? 8 : settings.get('maxPlayers');
+let minTimeLeft = typeof settings.get('minTimeLeft') == 'undefined' ? 3 : settings.get('minTimeLeft');
+let filterMaps = false;
+let avoidSameLobby = true;
+let currentURL = window.location.href;
+let gameModes = [];
+let bestLobby = '';
+let allLobbyData = [];
+let maps = ["Rust", "Terminal", "Nuke", "Sandstorm", "Clash", "Shipment", "Castle", "Nuketown", "Cathedral", "Village", "Mirage", "Pool"]; //default maps, sind sichtbar und Ã¤nderbar wie bei CSS (per komma nur getrennt?)
+let responseCount = 0;
+
+let minPlayerSlider;
+let maxPlayerSlider;
+let minPlayersLab;
+let maxPlayersLab;
+let minTimeLeftSlider;
+let minTimeLeftLab;
 
 let scene;
 
@@ -160,20 +189,21 @@ document.addEventListener("DOMContentLoaded", () => {
     gui.id = "gui";
 
     gui.innerHTML += "<style>\n" +
-        "       @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300&display=swap');" +
+        "        @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300&display=swap');\n" +
+        "\n" +
         "        #gui {\n" +
-        "            background-color: rgb(24,25,28);\n" +
-        "            border: solid rgb(24,25,28) 5px;\n" +
+        "            background-color: rgb(24, 25, 28);\n" +
+        "            border: solid rgb(24, 25, 28) 5px;\n" +
         "            box-shadow: 0 0 8px 2px #000000;\n" +
         "            position: absolute;\n" +
         "            left: 200px;\n" +
-        "            top: 260px;\n" +
+        "            top: 100px;\n" +
         "            z-index: 300;\n" +
         "            color: rgb(255, 255, 255);\n" +
         "            padding: 6px;\n" +
         "            font-family: \"Titillium Web\", serif;\n" +
         "            line-height: 1.6;\n" +
-        "            border-radius: 3px" +
+        "            border-radius: 3px\n" +
         "        }\n" +
         "\n" +
         "        input:disabled {\n" +
@@ -188,13 +218,13 @@ document.addEventListener("DOMContentLoaded", () => {
         "            display: flex;\n" +
         "            justify-content: center;\n" +
         "            align-items: center;\n" +
-        "            background-color: rgb(24,25,28);\n" +
+        "            background-color: rgb(24, 25, 28);\n" +
         "            margin: -9px -6px 8px;\n" +
         "            font-family: \"Titillium Web\", serif;\n" +
         "            font-weight: bold;\n" +
         "            text-align: center;\n" +
         "            font-size: 24px;\n" +
-        "            border-bottom: solid rgb(140,140,140) 2px;" +
+        "            border-bottom: solid rgb(140, 140, 140) 2px;\n" +
         "        }\n" +
         "\n" +
         "        .footer {\n" +
@@ -203,20 +233,23 @@ document.addEventListener("DOMContentLoaded", () => {
         "            display: flex;\n" +
         "            justify-content: center;\n" +
         "            align-items: center;\n" +
-        "            background-color: rgb(24,25,28);\n" +
+        "            background-color: rgb(24, 25, 28);\n" +
         "            margin: 6px -6px -10px;\n" +
         "            font-family: \"Titillium Web\", serif;\n" +
         "            font-weight: bold;\n" +
         "            text-align: center;\n" +
         "            font-size: 11px;\n" +
         "            position: relative;\n" +
-        "            border-top: solid rgb(140,140,140) 2px;" +
+        "            border-top: solid rgb(140, 140, 140) 2px;\n" +
         "        }\n" +
         "\n" +
         "        .module:hover {\n" +
         "            background-color: rgb(0, 0, 0, 0.1)\n" +
         "        }\n" +
         "\n" +
+        "        .autojoin{\n" +
+        "            display: none;\n" +
+        "        }\n" +
         "\n" +
         "    </style>\n" +
         "    <div id=\"infi\" class=\"heading\">Client Settings</div>\n" +
@@ -229,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "    <div class=\"module\">\n" +
         "        <input type=\"checkbox\" id=\"customCSS\" name=\"customCSS\">\n" +
         "        <label for=\"customCSS\">CSS Link: </label>\n" +
-        "        <input type=\"text\" id=\"cssLink\" placeholder='Paste CSS Link Here'>\n" +
+        "        <input type=\"text\" id=\"cssLink\" placeholder=\"Paste CSS Link Here\">\n" +
         "    </div>\n" +
         "\n" +
         "    <div class=\"module\">\n" +
@@ -263,10 +296,74 @@ document.addEventListener("DOMContentLoaded", () => {
         "    </div>\n" +
         "\n" +
         "    <div class=\"module\">\n" +
-        "        Inspect Key <button id='bindButton' style=\"width: 100px\">click to bind</button>\n" +
+        "        Inspect Key\n" +
+        "        <button id=\"bindButton\" style=\"width: 100px\">click to bind</button>\n" +
         "    </div>\n" +
         "\n" +
+        "    <div class=\"module\">\n" +
+        "        <input type=\"checkbox\" id=\"adspower\" name=\"adspower\">\n" +
+        "        <label for=\"adspower\">0 ADS Power</label>\n" +
+        "    </div>\n" +
         "\n" +
+        "    <div class=\"module\">\n" +
+        "        <input type=\"checkbox\" id=\"autoJoin\" name=\"autoJoin\">\n" +
+        "        <label for=\"autoJoin\">Auto-Joiner</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <hr class=\"autojoin\">\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"checkbox\" id=\"euLobbies\" name=\"euLobbies\">\n" +
+        "        <label for=\"euLobbies\">EU Lobbies</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"checkbox\" id=\"naLobbies\" name=\"naLobbies\">\n" +
+        "        <label for=\"naLobbies\">NA Lobbies</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"checkbox\" id=\"asiaLobbies\" name=\"asiaLobbies\">\n" +
+        "        <label for=\"asiaLobbies\">ASIA Lobbies</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"checkbox\" id=\"ffaLobbies\" name=\"ffaLobbies\">\n" +
+        "        <label for=\"ffaLobbies\">FFA Lobbies</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"checkbox\" id=\"tdmLobbies\" name=\"tdmLobbies\">\n" +
+        "        <label for=\"tdmLobbies\">TDM Lobbies</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"checkbox\" id=\"parkourLobbies\" name=\"parkourLobbies\">\n" +
+        "        <label for=\"parkourLobbies\">PARKOUR Lobbies</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <label for=\"preferredFilter\">Prefered Filter:</label>\n" +
+        "        <select id=\"preferredFilter\" name=\"preferredFilter\">\n" +
+        "            <option value=\"Time\">Time</option>\n" +
+        "            <option value=\"Players\">Players</option>\n" +
+        "        </select>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"range\" id=\"minPlayers\" name=\"minPlayers\" min=\"0\" max=\"8\" value=\"0\" step=\"1\">\n" +
+        "        <label id=\"minPlayersLab\" for=\"minPlayers\">min. Players</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"range\" id=\"maxPlayers\" name=\"maxPlayers\" min=\"0\" max=\"8\" value=\"0\" step=\"1\">\n" +
+        "        <label id=\"maxPlayersLab\" for=\"maxPlayers\">max. Players</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"range\" id=\"minTimeLeft\" name=\"minTimeLeft\" min=\"0\" max=\"8\" value=\"0\" step=\"1\">\n" +
+        "        <label id=\"minTimeLeftLab\" for=\"minTimeLeft\">min. Time Left</label>\n" +
+        "    </div>\n" +
         "    <div class=\"footer\">Toggle With \"PageUp\" Key</div>";
 
 
@@ -312,6 +409,49 @@ document.addEventListener("DOMContentLoaded", () => {
             settings.set('rainbow', rainbow);
         }
 
+        if (e.target.id === "adspower") {
+            adspower = e.target.checked;
+            settings.set('adspower', adspower);
+        }
+
+        if (e.target.id === "autoJoin") {
+            autoJoin = e.target.checked;
+            settings.set('autoJoin', autoJoin);
+            for (let e of document.getElementsByClassName('autojoin')) {
+                e.style.display = autoJoin ? 'block' : 'none'
+            }
+        }
+
+        if (e.target.id === "euLobbies") {
+            euLobbies = e.target.checked;
+            settings.set('euLobbies', euLobbies);
+        }
+
+        if (e.target.id === "naLobbies") {
+            naLobbies = e.target.checked;
+            settings.set('naLobbies', naLobbies);
+        }
+
+        if (e.target.id === "asiaLobbies") {
+            asiaLobbies = e.target.checked;
+            settings.set('asiaLobbies', asiaLobbies);
+        }
+
+        if (e.target.id === "ffaLobbies") {
+            ffaLobbies = e.target.checked;
+            settings.set('ffaLobbies', ffaLobbies);
+        }
+
+        if (e.target.id === "tdmLobbies") {
+            tdmLobbies = e.target.checked;
+            settings.set('tdmLobbies', tdmLobbies);
+        }
+
+        if (e.target.id === "parkourLobbies") {
+            parkourLobbies = e.target.checked;
+            settings.set('parkourLobbies', parkourLobbies);
+        }
+
     };
 
     gui.style.display = "none";
@@ -330,6 +470,45 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("black").checked = fullBlack;
     document.getElementById("wireframe").checked = wireframe;
     document.getElementById("rainbow").checked = rainbow;
+    document.getElementById("adspower").checked = adspower;
+
+    maxPlayersLab = document.getElementById('maxPlayersLab');
+    minPlayersLab = document.getElementById('minPlayersLab');
+    minTimeLeftLab = document.getElementById('minTimeLeftLab');
+
+    maxPlayerSlider = document.getElementById("maxPlayers");
+    minPlayerSlider = document.getElementById("minPlayers");
+    minTimeLeftSlider = document.getElementById("minTimeLeft");
+
+    maxPlayerSlider.onchange = () => {
+        settings.set('maxPlayers', Number.parseInt(maxPlayerSlider.value));
+    }
+
+    minPlayerSlider.onchange = () => {
+        settings.set('minPlayers', Number.parseInt(minPlayerSlider.value));
+    }
+
+    minTimeLeftSlider.onchange = () => {
+        settings.set('minTimeLeft', Number.parseInt(minTimeLeftSlider.value));
+    }
+
+    minPlayerSlider.value = minPlayers;
+    maxPlayerSlider.value = maxPlayers;
+    minTimeLeftSlider.value = minTimeLeft;
+
+    if (autoJoin) {
+        for (let e of document.getElementsByClassName('autojoin')) {
+            e.style.display = autoJoin ? 'block' : 'none'
+        }
+    }
+
+    document.getElementById("autoJoin").checked = autoJoin;
+    document.getElementById("euLobbies").checked = euLobbies;
+    document.getElementById("naLobbies").checked = naLobbies;
+    document.getElementById("asiaLobbies").checked = asiaLobbies;
+    document.getElementById("ffaLobbies").checked = ffaLobbies;
+    document.getElementById("tdmLobbies").checked = tdmLobbies;
+    document.getElementById("parkourLobbies").checked = parkourLobbies;
 
     let button = document.getElementById("bindButton");
     button.style.fontWeight = "800";
@@ -348,6 +527,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cssField.oninput = () => {
         settings.set('cssLink', cssField.value);
+    }
+
+    let filter = document.getElementById("preferredFilter");
+
+    filter.value = preferredFilter;
+
+    filter.onchange = () => {
+        preferredFilter = filter.value;
+        settings.set('preferredFilter', filter.value)
     }
 
 });
@@ -422,11 +610,22 @@ function animate() {
         b = color.b;
     }
 
+    if (minPlayerSlider) {
+        minPlayers = Number.parseInt(minPlayerSlider.value);
+        minPlayersLab.innerText = minPlayerSlider.value + " min. Players";
+    }
+    if (maxPlayerSlider) {
+        maxPlayers = Number.parseInt(maxPlayerSlider.value);
+        maxPlayersLab.innerText = maxPlayerSlider.value + " max. Players";
+    }
+
+    if(minTimeLeftSlider){
+        minTimeLeft = Number.parseInt(minTimeLeftSlider.value);
+        minTimeLeftLab.innerText = minTimeLeftSlider.value + " min. Time Left";
+    }
+
     if (crosshair && permCrosshair) crosshair.style = "visibility: visible !important; opacity: 1 !important; display: block !important;"
 
-
-    //just to remind you, your client has to be open source if you want to use stuff from here :)
-    //@AwesomeSam
     try {
 
         let weap = document.getElementsByClassName('list-weapons')[0].children[0].children[0].innerText;
@@ -500,7 +699,6 @@ function animate() {
                 armsMaterial.emissive.g = 0;
                 armsMaterial.emissive.b = 0;
 
-
                 weaponMaterial.wireframe = false;
                 weaponMaterial.color.r = 1;
                 weaponMaterial.color.g = 1;
@@ -549,7 +747,7 @@ function animate() {
 
 animate();
 
-//just to remind you, your client has to be open source if you want to use stuff from here :)
+
 XMLHttpRequest = class extends XMLHttpRequest {
 
     open(method, url) {
@@ -579,6 +777,122 @@ XMLHttpRequest = class extends XMLHttpRequest {
     }
 }
 
+
+function minutesLeft(e) {
+    return Math.ceil((480 - (Date.now() - Date.parse(e)) / 1000));
+}
+
+document.onkeydown = event => {
+    if (event.key === "F7" && autoJoin) {
+        responseCount = 0;
+        allLobbyData = [];
+
+        fetch('https://eu1.kirka.io/matchmake')
+            .then(response => response.json())
+            .then(dataEU => {
+
+                for (let i = 0; i < dataEU.length; i++) {
+                    dataEU[i].region = "EU";
+                }
+                if (euLobbies) {
+                    for (let i = 0; i < dataEU.length; i++) {
+                        allLobbyData.push(dataEU[i]);
+                    }
+                }
+                responseCount++;
+                checkSearchLobby();
+            });
+        fetch('https://na1.kirka.io/matchmake')
+            .then(response => response.json())
+            .then(dataNA => {
+
+                for (let i = 0; i < dataNA.length; i++) {
+                    dataNA[i].region = "NA";
+                }
+                if (naLobbies) {
+                    for (let i = 0; i < dataNA.length; i++) {
+                        allLobbyData.push(dataNA[i]);
+                    }
+                }
+                responseCount++;
+                checkSearchLobby();
+            });
+        fetch('https://asia1.kirka.io/matchmake')
+            .then(response => response.json())
+            .then(dataASIA => {
+
+                for (let i = 0; i < dataASIA.length; i++) {
+                    dataASIA[i].region = "ASIA";
+                }
+                if (asiaLobbies) {
+                    for (let i = 0; i < dataASIA.length; i++) {
+                        allLobbyData.push(dataASIA[i]);
+                    }
+                }
+                responseCount++;
+                checkSearchLobby();
+            });
+    }
+}
+
+function checkSearchLobby() {
+    if (responseCount < 3) return;
+
+    console.log(allLobbyData)
+
+    if (parkourLobbies) {
+        gameModes.push('ParkourRoom');
+    }
+    if (ffaLobbies) {
+        gameModes.push('DeathmatchRoom');
+    }
+    if (tdmLobbies) {
+        gameModes.push('TeamDeathmatchRoom');
+    }
+
+    let fittingLobbies = [];
+    for (let i = 0; i < allLobbyData.length; i++) {
+        if (allLobbyData[i].locked === false && allLobbyData[i].clients >= minPlayers && allLobbyData[i].clients <= maxPlayers && gameModes.includes(allLobbyData[i].name) && minutesLeft(allLobbyData[i].createdAt) >= minTimeLeft && (maps.includes(allLobbyData[i].metadata.mapName) || !filterMaps)) {
+            if (avoidSameLobby) {
+                if (!currentURL.includes(allLobbyData[i].roomId)) {
+                    fittingLobbies.push(allLobbyData[i]);
+                }
+            } else {
+                fittingLobbies.push(allLobbyData[i]);
+            }
+        }
+    }
+
+    if (fittingLobbies.length !== 0) {
+        bestLobby = fittingLobbies[0];
+        if (fittingLobbies.length > 0) {
+            for (let i = 0; i < fittingLobbies.length; i++) {
+                if (bestLobby.clients < fittingLobbies[i].clients) {
+                    bestLobby = fittingLobbies[i];
+                } else if (bestLobby.clients === fittingLobbies[i].clients) {
+                    if (minutesLeft(bestLobby.createdAt) < minutesLeft(fittingLobbies[i].createdAt)) {
+                        bestLobby = fittingLobbies[i];
+                    }
+                }
+            }
+        }
+    } else if (preferredFilter === 'Time') {
+        bestLobby = fittingLobbies[0];
+        if (fittingLobbies.length > 0) {
+            for (let i = 0; i < fittingLobbies.length; i++) {
+                if (minutesLeft(bestLobby.createdAt) < minutesLeft(fittingLobbies[i].createdAt)) {
+                    bestLobby = fittingLobbies[i];
+                }
+            }
+        }
+    }
+    if (fittingLobbies.length !== 0 && bestLobby !== '') {
+        let joinURL = 'https://kirka.io/games/' + bestLobby.region + '~' + bestLobby.roomId;
+        window.open(joinURL);
+    } else alert('No Lobby found - consider changing your settings'); //popup ohne alert?
+}
+
+
 function toggleGui() {
     menuVisible = !menuVisible;
     if (menuVisible) {
@@ -599,4 +913,25 @@ function hexToRgb(hex) {
     } : null;
 }
 
+let oldDefine = Object.defineProperty;
+Object.defineProperty = (...args) => {
+    if (args[0] && args[1] && args[1] === 'renderer' && args[0].constructor.name.startsWith('_0x')) {
+        if (args[0].WnNMwm) {
+            Object.defineProperty(args[0].camera, "fov", {
+                get() {
+                    return adspower ? args[0].WnNMwm.fov : this.vFov;
+                },
+                set(v) {
+                    this.vFov = v;
+                }
+            });
+        }
+    }
+    return oldDefine(...args);
+}
 
+const proxy = Function.prototype.constructor;
+Function.prototype.constructor = function (...args) {
+    if (args[0] === 'while (true) {}' || args[0] === 'debugger') return proxy.apply(this);
+    return proxy.apply(this, arguments);
+}

@@ -25,6 +25,7 @@ const createWindow = () => {
         webPreferences: {
             preload: __dirname + '/preload/ingame.js',
             nodeIntegration: false,
+            enableRemoteModule: false
         },
     });
     win.removeMenu();
@@ -35,6 +36,7 @@ const createWindow = () => {
 
     shortcuts.register(win, "Escape", () => win.webContents.executeJavaScript('document.exitPointerLock()', true));
     shortcuts.register(win, "F4", () => win.loadURL('https://kirka.io/'));
+    shortcuts.register(win, "F5", () => win.reload());
     shortcuts.register(win, "F6", () => win.loadURL(clipboard.readText()));
     shortcuts.register(win, 'F11', () => {
         win.setFullScreen(!win.isFullScreen());
