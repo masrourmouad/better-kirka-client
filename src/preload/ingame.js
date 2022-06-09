@@ -311,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "\n" +
         "    <div class=\"module\">\n" +
         "        <input type=\"checkbox\" id=\"autoJoin\" name=\"autoJoin\">\n" +
-        "        <label for=\"autoJoin\">Auto-Joiner</label>\n" +
+        "        <label for=\"autoJoin\">Auto-Joiner (Key F7)</label>\n" +
         "    </div>\n" +
         "\n" +
         "    <hr class=\"autojoin\">\n" +

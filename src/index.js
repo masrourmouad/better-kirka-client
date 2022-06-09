@@ -1,7 +1,16 @@
-const {app, BrowserWindow, clipboard, ipcMain} = require('electron');
+const {app, BrowserWindow, clipboard, ipcMain, dialog} = require('electron');
 const shortcuts = require('electron-localshortcut');
 const Store = require('electron-store');
 const {autoUpdater} = require('electron-updater');
+
+let updateLoaded = false;
+let updateNow = false;
+
+const clientId = '984501931273752577';
+const DiscordRPC = require('discord-rpc');
+const RPC = new DiscordRPC.Client({transport: 'ipc'});
+
+DiscordRPC.register(clientId);
 
 Store.initRenderer();
 
@@ -56,22 +65,70 @@ const createWindow = () => {
         e.preventDefault();
     });
 
-    win.on('ready-to-show', ()=>{
-        setTimeout(()=>{
-            autoUpdater.checkForUpdatesAndNotify();
-        }, 3000);
-    });
+    autoUpdater.checkForUpdates();
 
     autoUpdater.on('update-available', () => {
-        win.webContents.send('update');
+
+        const options = {
+            title: "Client Update",
+            buttons: ["Now", "Later"],
+            message: "Client Update available, do you want to install it now or after the next restart?",
+            icon: __dirname + "/icon.ico"
+        }
+
+        dialog.showMessageBox(options).then((result) => {
+            if (result.response === 0) {
+                updateNow = true;
+                if (updateLoaded) {
+                    autoUpdater.quitAndInstall();
+                }
+            }
+        });
+
     });
 
     autoUpdater.on('update-downloaded', () => {
-        autoUpdater.quitAndInstall();
+        updateLoaded = true;
+        if (updateNow) {
+            autoUpdater.quitAndInstall();
+        }
     });
+
 
 }
 
 app.on('ready', createWindow);
 
 app.on('window-all-closed', app.quit);
+
+let startTime = Date.now();
+
+async function setActivity() {
+    if (!RPC) return;
+    await RPC.setActivity({
+        startTimestamp: startTime,
+        largeImageKey: `rosenowhite`,
+        largeImageText: 'BKC',
+        instance: false,
+        buttons: [
+            {
+                label: `Download`,
+                url: `https://github.com/42infi/better-kirka-client/releases`
+            },
+            {
+                label: `Discord`,
+                url: `https://discord.gg/cNwzjsFHpg`
+            }
+        ]
+    });
+}
+
+RPC.on('ready', async () => {
+    await setActivity();
+
+    setInterval(() => {
+        setActivity();
+    }, 30 * 1000);
+});
+
+RPC.login({clientId}).catch(err => console.error(err))
