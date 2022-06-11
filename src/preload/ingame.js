@@ -71,7 +71,7 @@ let currentURL = window.location.href;
 let gameModes = [];
 let bestLobby = '';
 let allLobbyData = [];
-let maps = settings.get('maps').length > 0 ? settings.get('maps') : [];
+let maps = settings.get('maps') ? settings.get('maps') : [];
 let responseCount = 0;
 let minPlayerSlider;
 let maxPlayerSlider;
