@@ -35,7 +35,8 @@ let hideWeaponsAds = !!settings.get('hideWeaponsAds');
 let hideArms = !!settings.get('hideArms');
 let playerHighLight = !!settings.get('playerHighLight');
 let fullBlack = !!settings.get('fullBlack');
-let wireframe = !!settings.get('wireframe');
+let wireframeWeapons = !!settings.get('wireframeWeapons');
+let wireframeArms = !!settings.get('wireframeArms');
 let rainbow = !!settings.get('rainbow');
 let adspower = !!settings.get('adspower');
 let autoJoin = !!settings.get('autoJoin');
@@ -45,8 +46,8 @@ let inspecting = false;
 let prevInsp = false;
 let prevInspectPos;
 let prevInspectRot;
-
-let prevWireframe = false;
+let prevWireframeWeapons = false;
+let prevWireframeArms = false;
 
 let gui = document.createElement("div");
 let menuVisible = false;
@@ -64,15 +65,14 @@ let preferredFilter = typeof settings.get('preferredFilter') == 'undefined' ? 'P
 let minPlayers = typeof settings.get('minPlayers') == 'undefined' ? 4 : settings.get('minPlayers');
 let maxPlayers = typeof settings.get('maxPlayers') == 'undefined' ? 8 : settings.get('maxPlayers');
 let minTimeLeft = typeof settings.get('minTimeLeft') == 'undefined' ? 3 : settings.get('minTimeLeft');
-let filterMaps = false;
+let filterMaps = !!settings.get('filterMaps');
 let avoidSameLobby = true;
 let currentURL = window.location.href;
 let gameModes = [];
 let bestLobby = '';
 let allLobbyData = [];
-let maps = ["Rust", "Terminal", "Nuke", "Sandstorm", "Clash", "Shipment", "Castle", "Nuketown", "Cathedral", "Village", "Mirage", "Pool"]; //default maps, sind sichtbar und Ã¤nderbar wie bei CSS (per komma nur getrennt?)
+let maps = settings.get('maps').length > 0 ? settings.get('maps') : [];
 let responseCount = 0;
-
 let minPlayerSlider;
 let maxPlayerSlider;
 let minPlayersLab;
@@ -290,8 +290,13 @@ document.addEventListener("DOMContentLoaded", () => {
         "    </div>\n" +
         "\n" +
         "    <div class=\"module\">\n" +
-        "        <input type=\"checkbox\" id=\"wireframe\" name=\"wireframe\">\n" +
-        "        <label for=\"wireframe\">Wireframe Models</label>\n" +
+        "        <input type=\"checkbox\" id=\"wireframeWeapons\" name=\"wireframeWeapons\">\n" +
+        "        <label for=\"wireframeWeapons\">Wireframe Weapons</label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <div class=\"module\">\n" +
+        "        <input type=\"checkbox\" id=\"wireframeArms\" name=\"wireframeArms\">\n" +
+        "        <label for=\"wireframeArms\">Wireframe Arms</label>\n" +
         "    </div>\n" +
         "\n" +
         "    <div class=\"module\">\n" +
@@ -368,6 +373,14 @@ document.addEventListener("DOMContentLoaded", () => {
         "        <input type=\"range\" id=\"minTimeLeft\" name=\"minTimeLeft\" min=\"0\" max=\"8\" value=\"0\" step=\"1\">\n" +
         "        <label id=\"minTimeLeftLab\" for=\"minTimeLeft\">min. Time Left</label>\n" +
         "    </div>\n" +
+        "\n" +
+        "    <div class=\"module autojoin\">\n" +
+        "        <input type=\"checkbox\" id=\"filterMaps\" name=\"filterMaps\">\n" +
+        "        <label for=\"filterMaps\">Map Filter: </label>\n" +
+        "        <input type=\"text\" id=\"mapFilterField\" placeholder=\"Map1, Map2, Map3, etc.\">\n" +
+        "        <label for=\"mapFilterField\"></label>\n" +
+        "    </div>\n" +
+        "\n" +
         "    <div class=\"footer\">Toggle With \"PageUp\" Key</div>";
 
 
@@ -403,9 +416,14 @@ document.addEventListener("DOMContentLoaded", () => {
             settings.set('fullBlack', fullBlack);
         }
 
-        if (e.target.id === "wireframe") {
-            wireframe = e.target.checked;
-            settings.set('wireframe', wireframe);
+        if (e.target.id === "wireframeWeapons") {
+            wireframeWeapons = e.target.checked;
+            settings.set('wireframeWeapons', wireframeWeapons);
+        }
+
+        if (e.target.id === "wireframeArms") {
+            wireframeArms = e.target.checked;
+            settings.set('wireframeArms', wireframeArms);
         }
 
         if (e.target.id === "rainbow") {
@@ -456,6 +474,11 @@ document.addEventListener("DOMContentLoaded", () => {
             settings.set('parkourLobbies', parkourLobbies);
         }
 
+        if (e.target.id === "filterMaps") {
+            filterMaps = e.target.checked;
+            settings.set('filterMaps', filterMaps);
+        }
+
     };
 
     gui.style.display = "none";
@@ -472,7 +495,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("arms").checked = hideArms;
     document.getElementById("highlight").checked = playerHighLight;
     document.getElementById("black").checked = fullBlack;
-    document.getElementById("wireframe").checked = wireframe;
+    document.getElementById("wireframeWeapons").checked = wireframeWeapons;
+    document.getElementById("wireframeArms").checked = wireframeArms;
     document.getElementById("rainbow").checked = rainbow;
     document.getElementById("adspower").checked = adspower;
 
@@ -539,7 +563,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     filter.onchange = () => {
         preferredFilter = filter.value;
-        settings.set('preferredFilter', filter.value)
+        settings.set('preferredFilter', filter.value);
+    }
+
+    document.getElementById("filterMaps").checked = filterMaps;
+
+    let mapField = document.getElementById("mapFilterField");
+
+    let mapString ="";
+    for(let name of maps){
+        mapString += name + ", "
+    }
+
+     mapField.value = mapString.slice(0, -2);
+
+    mapField.oninput = () => {
+        maps = mapField.value.replaceAll(' ', '').toLowerCase().split(',');
+        settings.set('maps', maps);
     }
 
 });
@@ -677,7 +717,7 @@ function animate() {
 
         prevInsp = inspecting;
 
-        if (wireframe) {
+        if (wireframeArms) {
             armsMaterial.wireframe = true;
             armsMaterial.color.r = r / 255;
             armsMaterial.color.g = g / 255;
@@ -685,7 +725,17 @@ function animate() {
             armsMaterial.emissive.r = r / 255;
             armsMaterial.emissive.g = g / 255;
             armsMaterial.emissive.b = b / 255;
+        } else if (prevWireframeArms) {
+            armsMaterial.wireframe = false;
+            armsMaterial.color.r = 1;
+            armsMaterial.color.g = 1;
+            armsMaterial.color.b = 1;
+            armsMaterial.emissive.r = 0;
+            armsMaterial.emissive.g = 0;
+            armsMaterial.emissive.b = 0;
+        }
 
+        if (wireframeWeapons) {
             weaponMaterial.wireframe = true;
             weaponMaterial.color.r = r / 255;
             weaponMaterial.color.g = g / 255;
@@ -693,27 +743,18 @@ function animate() {
             weaponMaterial.emissive.r = r / 255;
             weaponMaterial.emissive.g = g / 255;
             weaponMaterial.emissive.b = b / 255;
-        } else {
-            if (prevWireframe) {
-                armsMaterial.wireframe = false;
-                armsMaterial.color.r = 1;
-                armsMaterial.color.g = 1;
-                armsMaterial.color.b = 1;
-                armsMaterial.emissive.r = 0;
-                armsMaterial.emissive.g = 0;
-                armsMaterial.emissive.b = 0;
-
-                weaponMaterial.wireframe = false;
-                weaponMaterial.color.r = 1;
-                weaponMaterial.color.g = 1;
-                weaponMaterial.color.b = 1;
-                weaponMaterial.emissive.r = 0;
-                weaponMaterial.emissive.g = 0;
-                weaponMaterial.emissive.b = 0;
-            }
+        } else if (prevWireframeWeapons) {
+            weaponMaterial.wireframe = false;
+            weaponMaterial.color.r = 1;
+            weaponMaterial.color.g = 1;
+            weaponMaterial.color.b = 1;
+            weaponMaterial.emissive.r = 0;
+            weaponMaterial.emissive.g = 0;
+            weaponMaterial.emissive.b = 0;
         }
 
-        prevWireframe = wireframe;
+        prevWireframeWeapons = wireframeWeapons;
+        prevWireframeArms = wireframeArms;
 
     } catch {
     }
@@ -842,7 +883,7 @@ document.onkeydown = event => {
 function checkSearchLobby() {
     if (responseCount < 3) return;
 
-    console.log(allLobbyData)
+    console.log(allLobbyData);
 
     if (parkourLobbies) {
         gameModes.push('ParkourRoom');
@@ -856,7 +897,7 @@ function checkSearchLobby() {
 
     let fittingLobbies = [];
     for (let i = 0; i < allLobbyData.length; i++) {
-        if (allLobbyData[i].locked === false && allLobbyData[i].clients >= minPlayers && allLobbyData[i].clients <= maxPlayers && gameModes.includes(allLobbyData[i].name) && minutesLeft(allLobbyData[i].createdAt) >= minTimeLeft && (maps.includes(allLobbyData[i].metadata.mapName) || !filterMaps)) {
+        if (allLobbyData[i].locked === false && allLobbyData[i].clients >= minPlayers && allLobbyData[i].clients <= maxPlayers && gameModes.includes(allLobbyData[i].name) && minutesLeft(allLobbyData[i].createdAt) >= minTimeLeft && (maps.includes(allLobbyData[i].metadata.mapName.toLowerCase()) || !filterMaps)) {
             if (avoidSameLobby) {
                 if (!currentURL.includes(allLobbyData[i].roomId)) {
                     fittingLobbies.push(allLobbyData[i]);

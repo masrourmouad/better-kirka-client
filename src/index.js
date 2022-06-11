@@ -109,7 +109,6 @@ async function setActivity() {
         startTimestamp: startTime,
         largeImageKey: `rosenowhite`,
         largeImageText: 'BKC',
-        instance: false,
         buttons: [
             {
                 label: `Download`,

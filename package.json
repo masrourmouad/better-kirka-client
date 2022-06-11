@@ -1,7 +1,7 @@
 {
   "name": "better-kirka-client",
   "productName": "Better Kirka Client",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "a better kirka client",
   "main": "src/index.js",
   "author": "infi",
@@ -16,7 +16,7 @@
     "deploy": "electron-builder build --win --x64 --ia32 --publish always"
   },
   "dependencies": {
-    "discord-rpc": "^3.0.2",
+    "discord-rpc": "^3.2.0",
     "electron-localshortcut": "^3.2.1",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.0.1",
