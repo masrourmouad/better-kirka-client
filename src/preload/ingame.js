@@ -79,6 +79,7 @@ let minPlayersLab;
 let maxPlayersLab;
 let minTimeLeftSlider;
 let minTimeLeftLab;
+let settingsButtonsAdded = false;
 
 let scene;
 
@@ -163,6 +164,89 @@ new MutationObserver(mutationRecords => {
                     observer.observe(hpElem, {
                         attributeFilter: ["style"],
                     });
+                }
+                if(el.classList?.contains("settings") && !settingsButtonsAdded){
+
+                    let exportBtn = document.createElement('div');
+
+                    exportBtn.id = "importBtn";
+
+                    exportBtn.style = "line-height: 1.2;\n" +
+                        "user-select: none;\n" +
+                        "--white: #fff;\n" +
+                        "--secondary-2: #37477c;\n" +
+                        "-webkit-font-smoothing: antialiased;\n" +
+                        "text-align: center;\n" +
+                        "font-family: Exo\\ 2;\n" +
+                        "box-sizing: border-box;\n" +
+                        "text-shadow: -1px -1px 0 #0f0f0f,1px -1px 0 #0f0f0f,-1px 1px 0 #0f0f0f,1px 1px 0 #0f0f0f;\n" +
+                        "font-weight: 100;\n" +
+                        "height: 100%;\n" +
+                        "padding: 0 .8rem;\n" +
+                        "color: var(--white);\n" +
+                        "font-size: 1.5rem;\n" +
+                        "box-shadow: 0 .125rem .25rem rgba(24,28,40,.25);\n" +
+                        "border-radius: 0 .313rem .313rem 0;\n" +
+                        "background-color: var(--secondary-2);\n" +
+                        "display: flex;\n" +
+                        "justify-content: center;\n" +
+                        "align-items: center;"
+
+                    exportBtn.innerText = "Export to clipboard"
+
+                    exportBtn.onclick = () => {
+                        let gameSettingsObj = {};
+
+                        for (let key in localStorage){
+                            if(key.startsWith("m")){
+                                if(localStorage[key].startsWith('"') && localStorage[key].endsWith('"')){
+                                    gameSettingsObj[key] = localStorage[key].slice(1, -1);
+                                }else{
+                                    gameSettingsObj[key] = localStorage[key];
+                                }
+                            }
+                        }
+                        clipboard.writeText(JSON.stringify(gameSettingsObj));
+                    }
+
+
+                    let importBtn = document.createElement('div');
+
+                    importBtn.id = "importBtn";
+
+                    importBtn.style = "line-height: 1.2;\n" +
+                        "user-select: none;\n" +
+                        "--white: #fff;\n" +
+                        "--secondary-2: #37477c;\n" +
+                        "-webkit-font-smoothing: antialiased;\n" +
+                        "text-align: center;\n" +
+                        "font-family: Exo\\ 2;\n" +
+                        "box-sizing: border-box;\n" +
+                        "text-shadow: -1px -1px 0 #0f0f0f,1px -1px 0 #0f0f0f,-1px 1px 0 #0f0f0f,1px 1px 0 #0f0f0f;\n" +
+                        "font-weight: 100;\n" +
+                        "height: 100%;\n" +
+                        "padding: 0 .8rem;\n" +
+                        "color: var(--white);\n" +
+                        "font-size: 1.5rem;\n" +
+                        "box-shadow: 0 .125rem .25rem rgba(24,28,40,.25);\n" +
+                        "border-radius: 0 .313rem .313rem 0;\n" +
+                        "background-color: var(--secondary-2);\n" +
+                        "display: flex;\n" +
+                        "justify-content: center;\n" +
+                        "align-items: center;"
+
+                    importBtn.innerText = "Import from clipboard"
+
+                    importBtn.onclick = () => {
+                        Object.assign(localStorage, JSON.parse(clipboard.readText()));
+                        window.location.reload();
+                    }
+
+                    document.getElementsByClassName('left')[0].appendChild(exportBtn);
+                    document.getElementsByClassName('left')[0].appendChild(importBtn);
+
+                    settingsButtonsAdded = true;
+
                 }
             });
         });
@@ -570,12 +654,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let mapField = document.getElementById("mapFilterField");
 
-    let mapString ="";
-    for(let name of maps){
+    let mapString = "";
+    for (let name of maps) {
         mapString += name + ", "
     }
 
-     mapField.value = mapString.slice(0, -2);
+    mapField.value = mapString.slice(0, -2);
 
     mapField.oninput = () => {
         maps = mapField.value.replaceAll(' ', '').toLowerCase().split(',');
@@ -654,18 +738,20 @@ function animate() {
         b = color.b;
     }
 
-    if (minPlayerSlider) {
-        minPlayers = Number.parseInt(minPlayerSlider.value);
-        minPlayersLab.innerText = minPlayerSlider.value + " min. Players";
-    }
-    if (maxPlayerSlider) {
-        maxPlayers = Number.parseInt(maxPlayerSlider.value);
-        maxPlayersLab.innerText = maxPlayerSlider.value + " max. Players";
-    }
+    if (menuVisible) {
+        if (minPlayerSlider) {
+            minPlayers = Number.parseInt(minPlayerSlider.value);
+            minPlayersLab.innerText = minPlayerSlider.value + " min. Players";
+        }
+        if (maxPlayerSlider) {
+            maxPlayers = Number.parseInt(maxPlayerSlider.value);
+            maxPlayersLab.innerText = maxPlayerSlider.value + " max. Players";
+        }
 
-    if (minTimeLeftSlider) {
-        minTimeLeft = Number.parseInt(minTimeLeftSlider.value);
-        minTimeLeftLab.innerText = minTimeLeftSlider.value + " min. Time Left";
+        if (minTimeLeftSlider) {
+            minTimeLeft = Number.parseInt(minTimeLeftSlider.value);
+            minTimeLeftLab.innerText = minTimeLeftSlider.value + " min. Time Left";
+        }
     }
 
     if (crosshair && permCrosshair) crosshair.style = "visibility: visible !important; opacity: 1 !important; display: block !important;"

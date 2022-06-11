@@ -130,4 +130,4 @@ RPC.on('ready', async () => {
     }, 30 * 1000);
 });
 
-RPC.login({clientId}).catch(err => console.error(err))
+RPC.login({clientId}).catch(err => console.error(err));
