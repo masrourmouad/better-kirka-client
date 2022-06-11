@@ -192,6 +192,14 @@ new MutationObserver(mutationRecords => {
                         "justify-content: center;\n" +
                         "align-items: center;"
 
+                    exportBtn.onmouseover = () =>{
+                        exportBtn.style.color = "#ffd500";
+                    }
+
+                    exportBtn.onmouseout = () =>{
+                        exportBtn.style.color = "#ffffff";
+                    }
+
                     exportBtn.innerText = "Export to clipboard"
 
                     exportBtn.onclick = () => {
@@ -234,6 +242,14 @@ new MutationObserver(mutationRecords => {
                         "display: flex;\n" +
                         "justify-content: center;\n" +
                         "align-items: center;"
+
+                    importBtn.onmouseover = () =>{
+                        importBtn.style.color = "#ffd500";
+                    }
+
+                    importBtn.onmouseout = () =>{
+                        importBtn.style.color = "#ffffff";
+                    }
 
                     importBtn.innerText = "Import from clipboard"
 
