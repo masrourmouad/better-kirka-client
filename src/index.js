@@ -1,4 +1,5 @@
-const {app, BrowserWindow, clipboard, ipcMain, dialog} = require('electron');
+const {app, BrowserWindow, clipboard, ipcMain, dialog, session, protocol} = require('electron');
+const fs = require('fs');
 const shortcuts = require('electron-localshortcut');
 const Store = require('electron-store');
 const {autoUpdater} = require('electron-updater');
@@ -6,8 +7,23 @@ const {autoUpdater} = require('electron-updater');
 let updateLoaded = false;
 let updateNow = false;
 
+
+function checkCreateFolder(folder) {
+    if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, {recursive: true});
+    }
+    return folder;
+}
+
+let swapperFolder = app.getPath('documents') + "\\BetterKirkaClient\\swapper";
+checkCreateFolder(app.getPath('documents') + "\\BetterKirkaClient\\swapper\\assets\\img");
+checkCreateFolder(app.getPath('documents') + "\\BetterKirkaClient\\swapper\\assets\\glb");
+checkCreateFolder(app.getPath('documents') + "\\BetterKirkaClient\\swapper\\assets\\media");
+
+
 const clientId = '984501931273752577';
 const DiscordRPC = require('discord-rpc');
+const url = require("url");
 const RPC = new DiscordRPC.Client({transport: 'ipc'});
 
 DiscordRPC.register(clientId);
@@ -37,7 +53,8 @@ const createWindow = () => {
         webPreferences: {
             preload: __dirname + '/preload/ingame.js',
             nodeIntegration: false,
-            enableRemoteModule: false
+            enableRemoteModule: false,
+            webSecurity: false
         },
     });
     win.removeMenu();
@@ -56,6 +73,11 @@ const createWindow = () => {
     });
     shortcuts.register(win, 'F12', () => win.webContents.openDevTools());
 
+    protocol.registerFileProtocol('file', (request, callback) => {
+        const pathname = decodeURIComponent(request.url.replace('file:///', ''));
+        callback(pathname);
+    });
+    initResourceSwapper();
 
     win.loadURL('https://kirka.io/');
 
@@ -97,12 +119,42 @@ const createWindow = () => {
         }
     });
 
-
 }
 
 app.on('ready', createWindow);
 
 app.on('window-all-closed', app.quit);
+
+
+//improved swapper from here https://github.com/McSkinnerOG/Min-Client/blob/main/src/main.js#L194
+const initResourceSwapper = () => {
+    let swap = {filter: {urls: []}, files: {}};
+    const allFilesSync = (dir) => {
+        fs.readdirSync(dir).forEach(file => {
+            const filePath = dir + '/' + file
+            let useAssets = !(/BetterKirkaClient\\swapper\\(css|docs|img|libs|pkg|sound)/.test(dir));
+            if (fs.statSync(filePath).isDirectory()) {
+                allFilesSync(filePath);
+            } else {
+                let kirk = '*://' + (useAssets ? 'kirka.io' : '') + filePath.replace(swapperFolder, '').replace(/\\/g, '/') + '*';
+                swap.filter.urls.push(kirk);
+                swap.files[kirk.replace(/\*/g, '')] = url.format({
+                    pathname: filePath,
+                    protocol: '',
+                    slashes: false
+                });
+            }
+        });
+    };
+    allFilesSync(swapperFolder);
+    if (swap.filter.urls.length) {
+        session.defaultSession.webRequest.onBeforeRequest(swap.filter, (details, callback) => {
+            let redirect = swap.files[details.url.replace(/https|http|(\?.*)|(#.*)/gi, '')] || details.url;
+            callback({cancel: false, redirectURL: redirect});
+        });
+    }
+}
+
 
 let startTime = Date.now();
 

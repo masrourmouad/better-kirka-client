@@ -6,11 +6,7 @@ const Store = require('electron-store');
 const settings = new Store();
 
 const documents = ipcRenderer.sendSync('docs');
-let scriptFolder = documents + "\\BetterKirkaClient\\scripts";
-
-ipcRenderer.on('update', () => {
-    alert("new update available, downloading and installing, client restarting soon")
-});
+const scriptFolder = documents + "\\BetterKirkaClient\\scripts";
 
 if (!fs.existsSync(scriptFolder)) {
     fs.mkdirSync(scriptFolder, {recursive: true});
