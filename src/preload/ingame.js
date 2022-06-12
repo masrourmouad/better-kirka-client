@@ -40,6 +40,7 @@ let wireframeArms = !!settings.get('wireframeArms');
 let rainbow = !!settings.get('rainbow');
 let adspower = !!settings.get('adspower');
 let autoJoin = !!settings.get('autoJoin');
+let fpsCap  = typeof settings.get('fpsCap') === 'undefined' ? true : settings.get('fpsCap');
 
 
 let inspecting = false;
@@ -150,8 +151,12 @@ new MutationObserver(mutationRecords => {
 
                     document.getElementsByClassName('play-content')[0].append(btn);
 
+                    document.getElementsByClassName('settings-and-socicons')[0].children[0].onclick = () => {
+                        window.open("https://discord.com/invite/cNwzjsFHpg");
+                    };
+
                     document.getElementsByClassName('settings-and-socicons')[0].children[1].onclick = () => {
-                        window.open("https://www.youtube.com/watch?v=Vmf5evAwScc");
+                        window.open("https://github.com/42infi/better-kirka-client/releases");
                     };
 
                     if (!el.classList?.contains("home") && !el.classList?.contains('moneys')) el.parentNode.removeChild(el);
@@ -478,7 +483,13 @@ document.addEventListener("DOMContentLoaded", () => {
         "        <input type=\"checkbox\" id=\"filterMaps\" name=\"filterMaps\">\n" +
         "        <label for=\"filterMaps\">Map Filter: </label>\n" +
         "        <input type=\"text\" id=\"mapFilterField\" placeholder=\"Map1, Map2, Map3, etc.\">\n" +
-        "        <label for=\"mapFilterField\"></label>\n" +
+        "    </div>\n" +
+        "\n" +
+        "    <hr class=\"autojoin\">\n" +
+        "\n" +
+        "    <div class=\"module\">\n" +
+        "        <input type=\"checkbox\" id=\"fpsCap\" name=\"fpsCap\">\n" +
+        "        <label for=\"fpsCap\">Cap FPS</label>\n" +
         "    </div>\n" +
         "\n" +
         "    <div class=\"footer\">Toggle With \"PageUp\" Key</div>";
@@ -577,6 +588,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target.id === "filterMaps") {
             filterMaps = e.target.checked;
             settings.set('filterMaps', filterMaps);
+        }
+
+        if (e.target.id === "fpsCap") {
+            fpsCap = e.target.checked;
+            settings.set('fpsCap', fpsCap);
+            alert("setting will apply after client restart");
         }
 
     };
@@ -681,6 +698,8 @@ document.addEventListener("DOMContentLoaded", () => {
         maps = mapField.value.replaceAll(' ', '').toLowerCase().split(',');
         settings.set('maps', maps);
     }
+
+    document.getElementById("fpsCap").checked = fpsCap;
 
 });
 
