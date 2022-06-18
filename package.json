@@ -1,7 +1,7 @@
 {
   "name": "better-kirka-client",
   "productName": "Better Kirka Client",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "description": "a better kirka client",
   "main": "src/index.js",
   "author": "infi",
@@ -23,7 +23,7 @@
     "electron-updater": "^5.0.1"
   },
   "devDependencies": {
-    "electron": "^10.4.7",
+    "electron": "^9.4.4",
     "electron-builder": "^23.0.3"
   },
   "build": {

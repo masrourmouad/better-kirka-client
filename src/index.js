@@ -37,6 +37,13 @@ if (!settings.get('fpsCap')) {
     app.commandLine.appendSwitch('disable-gpu-vsync');
 }
 
+if (settings.get('capture')) {
+    app.commandLine.appendSwitch('use-angle', 'd3d9');
+    app.commandLine.appendSwitch('enable-webgl2-compute-context');
+    app.commandLine.appendSwitch('renderer-process-limit', 100);
+    app.commandLine.appendSwitch('max-active-webgl-contexts', 100);
+}
+
 app.commandLine.appendSwitch('ignore-gpu-blacklist');
 app.allowRendererProcessReuse = true;
 

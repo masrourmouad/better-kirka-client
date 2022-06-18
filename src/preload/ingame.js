@@ -36,7 +36,8 @@ let wireframeArms = !!settings.get('wireframeArms');
 let rainbow = !!settings.get('rainbow');
 let adspower = !!settings.get('adspower');
 let autoJoin = !!settings.get('autoJoin');
-let fpsCap  = typeof settings.get('fpsCap') === 'undefined' ? true : settings.get('fpsCap');
+let fpsCap  = typeof settings.get('fpsCap') == 'undefined' ? false : settings.get('fpsCap');
+let capture  = typeof settings.get('capture') == 'undefined' ? false : settings.get('capture');
 
 
 let inspecting = false;
@@ -488,6 +489,11 @@ document.addEventListener("DOMContentLoaded", () => {
         "        <label for=\"fpsCap\">Cap FPS</label>\n" +
         "    </div>\n" +
         "\n" +
+        "    <div class=\"module\">\n" +
+        "        <input type=\"checkbox\" id=\"capture\" name=\"capture\">\n" +
+        "        <label for=\"capture\">Window Capture</label>\n" +
+        "    </div>\n" +
+        "\n" +
         "    <div class=\"footer\">Toggle With \"PageUp\" Key</div>";
 
 
@@ -589,6 +595,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.target.id === "fpsCap") {
             fpsCap = e.target.checked;
             settings.set('fpsCap', fpsCap);
+            alert("setting will apply after client restart");
+        }
+
+        if (e.target.id === "capture") {
+            capture = e.target.checked;
+            settings.set('capture', capture);
             alert("setting will apply after client restart");
         }
 
@@ -696,6 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.getElementById("fpsCap").checked = fpsCap;
+    document.getElementById("capture").checked = capture;
 
 });
 
